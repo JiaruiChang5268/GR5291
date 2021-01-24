@@ -1,0 +1,75 @@
+---
+title: "HW6"
+author: "Jiarui Chang"
+date: "2020/10/30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,warning=F,message=F}
+library(dplyr)
+library(nlme)
+```
+## 1
+
+```{r}
+get_result <- function(x){
+  dayx <- merge(ChickWeight[ChickWeight$Time == x,], ChickWeight[ChickWeight$Time == 0,], by = "Chick")
+  aov_result <- aov(dayx$weight.x ~ dayx$Diet.x + dayx$weight.y)
+  return(summary(aov_result))
+}
+```
+
+```{r}
+get_result(10)
+```
+
+```{r}
+get_result(18)
+```
+```{r}
+get_result(20)
+```
+\
+From the results above, we can find out that all of the p-value come out to be less than 0.05, which indicate that there is a significant difference in the mean weight of the four group.
+
+
+##2
+```{r}
+chickendata <- ChickWeight[ChickWeight$Time == 0 | ChickWeight$Time == 10 | ChickWeight$Time == 18 | ChickWeight$Time == 20,]
+anova_combined <- aov(chickendata$weight ~ chickendata$Diet * chickendata$Time + Error(chickendata$Chick))
+summary(anova_combined)
+```
+\
+From the result above, the p-values for Diet and Time are significant. Which means there is a significant difference in mean weight of the four groups of chicken. But we can find that the interaction between Time and Diet is not significant. 
+
+
+
+```{r}
+groupchicken <- groupedData(weight ~ as.numeric(Diet) * as.numeric(Time) | Chick, data = chickendata)
+compoundsym <- gls(weight ~ Diet * Time, data = groupchicken, corr = corCompSymm(, form = ~1 | Chick))
+summary(compoundsym)
+```
+
+```{r}
+unstructure <- gls(weight ~ Diet * Time, data = groupchicken, corr = corSymm(form = ~1|Chick),
+                   weights = varIdent(form = ~1|Time))
+summary(unstructure)
+```
+
+```{r}
+anova(compoundsym, unstructure)
+```
+\
+From the result above that we can find unstructure has a lower AIC and BIC value compare with compound symmetry, and also a lower value of loglikelyhood, and the p-value for Diet2, Diet3 and Diet4 is larger than 0.05, thus we fail to reject null hypothesis. 
+
+
+
+
+
+
+
+

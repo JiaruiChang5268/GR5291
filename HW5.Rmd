@@ -1,0 +1,58 @@
+---
+title: "HW5"
+author: "Jiarui Chang"
+date: "2020/10/15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,warning=F,message=F}
+library(dplyr)
+library(emmeans)
+```
+
+## 1
+# a
+```{r}
+chicken <- ChickWeight %>% filter(Time == 21)
+fit <- lm(weight ~ Diet, data = chicken)
+summary(aov(fit))
+```
+\
+From the result we can find out that the p-value of F test is 0.00686, much more smaller than 0.05, thus we can reject the null hypothesis. Conclude that there is a significant difference between mean weight among 4 groups.
+\
+
+# b
+```{r}
+birthweright <- ChickWeight %>% filter(Time == 0)
+adjust_weight <- chicken %>% left_join(birthweright, by = "Chick")
+adjust_weight <- adjust_weight$weight.x - adjust_weight$weight.y 
+chicken["weight"] <- adjust_weight
+fit2 <- lm(weight~Diet, data = chicken)
+summary(aov(fit2))
+ls <- lsmeans(fit2, ~Diet)
+ls
+```
+\
+After we adjust the weight by the birth weight, we can find out the p-value 0.00627 is still less than 0.05, so there is a significant difference between mean of 4 groups. The Lsmean is shown above.
+
+## 2
+# ab
+```{r}
+result_1 <- pairwise.t.test(chicken[['weight']], chicken[['Diet']], p.adjust.method = "bonferroni")
+result_2 <- TukeyHSD(aov(fit))
+result_1
+result_2
+```
+\
+From the result above we can find out that 
+\
+
+## 3
+
+```{r}
+kruskal.test(weight~Diet, data = chicken)
+```

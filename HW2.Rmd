@@ -1,0 +1,82 @@
+---
+title: "HW2"
+author: "Jiarui Chang"
+date: "2020/9/23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+
+```{r,message=F}
+library(dplyr)
+```
+
+# a
+```{r}
+OJ <- ToothGrowth %>% filter(supp == "OJ")
+VC <- ToothGrowth %>% filter(supp == "VC")
+t.test(OJ[,1],VC[,1])
+```
+\
+From the result we can find that p = 0.06063 which indicate that there is no significant difference in means of the two group.
+
+
+# b
+```{r, warning=F}
+wilcox.test(OJ[,1], VC[,1])
+```
+\
+From the result we can find that p = 0.0644, also showed that there is no significant difference.
+# c
+For t test, we have to make sure that our data set is normally distributed and each datapoint is independent with each other. When we face some data that fail some of the assumption, we can modify the data set let them to be fasible, like doing log. 
+For nonparametric methond like wilcoxon rank sun test, we don't need that much assumption. Basically we are setting up hypothesis only based on rank. 
+
+
+
+## 2
+# a
+```{r}
+High <- ToothGrowth %>% filter(len > 20)
+low <- ToothGrowth %>% filter(len <= 20)
+High.OJ <- High %>% filter(supp == "OJ")
+High.VC <- High %>% filter(supp == "VC")
+n_OJ <- nrow(OJ)
+n_VC <- nrow(VC)
+prop.test(c(nrow(High.OJ), nrow(High.VC)), c(n_OJ, n_VC))
+```
+\
+From the result we can find out that tht p-value = 0.07008, which means there is no significant difference of proportion of High class between OJ and VC group. and the 95% confident interval is [-0.00995, 0.54328].
+
+# b
+```{r}
+Low.OJ <- low %>% filter(supp == "OJ")
+Low.VC <- low %>% filter(supp == "VC")
+High.OJ.1 <- High.OJ %>% filter(dose == 0.5)
+High.OJ.2 <- High.OJ %>% filter(dose == 1)
+High.OJ.3 <- High.OJ %>% filter(dose == 2)
+Low.OJ.1 <- Low.OJ %>% filter(dose == 0.5)
+Low.OJ.2 <- Low.OJ %>% filter(dose == 1)
+Low.OJ.3 <- Low.OJ %>% filter(dose == 2)
+High.VC.1 <- High.VC %>% filter(dose == 0.5)
+High.VC.2 <- High.VC %>% filter(dose == 1)
+High.VC.3 <- High.VC %>% filter(dose == 2)
+Low.VC.1 <- Low.VC %>% filter(dose == 0.5)
+Low.VC.2 <- Low.VC %>% filter(dose == 1)
+Low.VC.3 <- Low.VC %>% filter(dose == 2)
+```
+
+```{r}
+Data <- array(c(nrow(High.OJ.1),nrow(Low.OJ.1),
+                nrow(High.VC.1),nrow(Low.VC.1),
+                nrow(High.OJ.2),nrow(Low.OJ.2),
+                nrow(High.VC.2),nrow(Low.VC.2),
+                nrow(High.OJ.3),nrow(Low.OJ.3),
+                nrow(High.VC.3),nrow(Low.VC.3)), c(2,2,3))
+mantelhaen.test(Data)
+```
+\
+From the result we can find out that the p-value is 0.008392. Thus we reject the null hypothesis. Which means the proportion of 3 different group with different dose value are different.

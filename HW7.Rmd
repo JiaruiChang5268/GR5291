@@ -1,0 +1,94 @@
+---
+title: "HW7"
+author: "Jiarui Chang"
+date: "2020/11/4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+# a
+```{r, message=F,warning = F}
+library(dplyr)
+library(glmnet)
+```
+```{r}
+day21 <- ChickWeight %>% filter(Time == 21)
+day21_withoutad <- day21 %>% mutate(WeightGroup = ifelse(weight < 120,1,0))
+day21_withoutad_14 <- day21_withoutad %>% filter(Diet %in% c(1,4))
+logit_result <- glm(WeightGroup ~ Diet, data = day21_withoutad_14,
+                    family = "binomial")
+summary(logit_result)
+```
+\
+From the result above we can find out the p-value for $\beta_1$ is much larger than 0.05, we fail to reject the null hypothesis. and conclude that there is no significant association between group diet 1 and diet 4 without adjustment for birthweight.
+\
+
+# b
+
+```{r}
+birth_weight <- ChickWeight %>% filter(Time == 0)
+day21_withad <- day21 %>% left_join(birth_weight, by = ("Chick")) %>%
+  mutate(ad_weight = weight.x - weight.y) %>% select(ad_weight, Time.x, Chick, Diet.x)
+colnames(day21_withad) <- c("AdjustWeight", "Time", 
+                               "Chick", "Diet")
+day21_withad <- day21_withad %>% mutate(WeightGroup = ifelse(AdjustWeight < 120,1,0))
+day21_withad_14 <- day21_withad %>% filter(Diet %in% c(1,4))
+logit_result2 <- glm(WeightGroup ~ Diet, data = day21_withad_14,
+                     family = "binomial")
+summary(logit_result2)
+```
+\
+From the result above we can find out the p-value for $\beta_1$ is much larger than 0.05, we fail to reject the null hypothesis. and conclude that there is no significant association between group diet 1 and diet 4 with adjustment for birthweight.
+\
+
+## 2
+# a
+```{r}
+logit_result3 <- glm(WeightGroup ~ Diet, data = day21_withoutad,
+                     family = "binomial")
+summary(logit_result3)
+```
+\
+From the result above we can find out the p-value for $\beta_1$, $\beta_2$, $\beta_3$ are much larger than 0.05, we fail to reject the null hypothesis. and conclude that there is no significant association between group diet 1, diet2, diet 3 and diet 4 without adjustment for birthweight.
+\
+
+# b
+```{r}
+logit_result4 <- glm(WeightGroup ~ Diet, data = day21_withad,
+                     family = "binomial")
+summary(logit_result4)
+```
+\
+From the result above we can find out the p-value for $\beta_1$, $\beta_2$, $\beta_3$ are much larger than 0.05, we fail to reject the null hypothesis. and conclude that there is no significant association between group diet 1, diet2, diet 3 and diet 4 without adjustment for birthweight.
+\
+
+## 3
+```{r,warning=F}
+set.seed(10)
+diet1 <- cbind(1, as.numeric(day21_withoutad_14$Diet))
+cv1 <- cv.glmnet(diet1, day21_withoutad_14$WeightGroup, family = "binomial")
+plot(cv1)
+```
+
+```{r,warning=FALSE}
+fit1 <- glmnet(diet1, day21_withoutad_14$WeightGroup, family = "binomial", lambda = cv1$lambda.min)
+coef(cv1, s = "lambda.min")
+summary(fit1$beta)
+cv1
+```
+
+```{r,warning=F}
+diet2 <- cbind(1, as.numeric(day21_withad_14$Diet))
+cv2 <- cv.glmnet(diet2, day21_withad_14$WeightGroup, family = "binomial")
+plot(cv2)
+```
+
+```{r}
+fit2 <- glmnet(diet2, day21_withad_14$WeightGroup, family = "binomial", lambda = cv2$lambda.min)
+coef(cv2, s = "lambda.min")
+cv2
+```

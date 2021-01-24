@@ -1,0 +1,105 @@
+---
+title: "HW8"
+author: "Jiarui Chang"
+date: "2020/11/9"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,message=F,warning=F}
+library(glmnet)
+```
+## 1
+# a
+```{R}
+dataset <- Sleuth3::ex2224
+as_factor <- function(x){
+  as.factor(as.numeric(x))
+}
+for (i in 1:5){
+  dataset[,i] = as_factor(dataset[,i])
+}
+
+```
+
+```{r}
+fit1 <- glm(Failures ~Operator, data = dataset, family = poisson)
+summary(fit1)
+```
+
+```{r}
+anova(fit1, test = "Chisq")
+```
+\
+From the result we can find out the p value is significant, thus we can condlude there is a significant association. 
+\
+
+# b 
+```{r}
+fit2 <- glm(Failures ~ System + Operator + Valve + Size + Mode, data = dataset, family = poisson, offset = log(Time))
+summary(fit2)
+```
+
+```{r}
+anova(fit2, test = "Chisq")
+```
+\
+From the result we can find out the p value is significant, thus we can condlude there is a significant association between Faliures, System, Valve and Size. 
+\
+
+
+## 2
+# a
+From the result of fit1 model, we can conclude that operator 2 will reduce the mean number of failures by 0.54. Operator 3 will reduce the mean number of failures by 0.34. Operator 4 will reduce the mean number of failures by 0.82. And from the summary result, only the operator 3 and operator 4 are significant.
+\
+\
+From the result of fit2 model, we can conclude that systme 2 will increase the mean number of failures by 1.5. System 3 wll increase the mean number of failures by 1.76. System 4 will increase the mean number of failures by 2.4. System 5 will increase the mean number of failures by 0.4. Operator 2 will increase the mena number of failures by 1.02. Operator 3 will reduce the mean number of failures by 0.7. Operator 4 will reduce the mean number of failures by 0.92. Valve 2 will will increase the mean number of failures by 0.203. Valve 3 will increase the mean number of failures 0.834. Valve 4 will reduce the mean number of failures by 18.28. Valve 5 will increase the mean number of failures 5. Valve 6 will increase the mean number of failures 1.74. Size 2 will reduce mean number of failures by 0.0121. Size 3 will increase mean of failures by 4. And from the summary result, system3, system4, operator3, operator4, valve4, valve5, size3 are significant.
+
+
+# b
+```{r}
+pchisq(fit1$deviance, fit1$df.residual, lower.tail=FALSE)
+```
+
+```{r}
+pchisq(fit2$deviance, fit2$df.residual, lower.tail=FALSE)
+```
+\
+We can find out that both of the two model has a really small p-value, thus we can reject the null hypothesis.
+\
+
+## 3
+```{r}
+set.seed(1)
+mat <- model.matrix(Failures ~ System + Operator + Valve + Size + Mode, dataset)[,-1]
+x <- as.matrix(mat)
+cv <- cv.glmnet(x, dataset$Failures, family="poisson", offset = log(dataset$Time))
+plot(cv)
+```
+```{r}
+cv$lambda.min
+coef(cv, cv$lambda.min)
+```
+\
+Based on the result, the model would only contain system 2 to 5, operator 2 to 4, valve 2, 4, 5 and size 3 with the value showed above. 
+\
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

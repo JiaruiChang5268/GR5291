@@ -1,0 +1,106 @@
+---
+title: "HW1"
+author: "Jiarui Chang"
+date: "2020/9/17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results='hide'}
+library(Sleuth3)
+library(dplyr)
+library(bootstrap)
+```
+
+##1
+```{r}
+data <- Sleuth3::case0102
+salary <- data[,1]
+boxplot(salary)
+max(salary)
+```
+\
+From the box plot above we can find out that there is an outliner with salary 8100.
+
+##2
+```{r}
+male <- data %>% filter(Sex == 'Male')
+female <- data %>% filter(Sex == 'Female')
+sd_male <- sd(male[,1])
+sd_female <- sd(female[,1])
+mean_male <- mean(male[,1])
+mean_female <- mean(female[,1])
+cv_male <- sd_male/mean_male
+cv_female <- sd_female/mean_female
+median_male <- median(male[,1])
+median_female <- median(female[,1])
+result <- matrix(c(cv_male,cv_female,median_male,median_female), nrow = 2, ncol = 2)
+rownames(result) <- c('Male','Female')
+colnames(result) <- c('CV','median')
+result
+```
+\
+
+##3
+```{r}
+cv <- function(x){
+  sd(x)/mean(x)
+}
+jack_var_male <- (jackknife(male[,1], cv)$jack.se)^2
+jack_var_female <- (jackknife(female[,1], cv)$jack.se)^2
+jack_bias_male <- jackknife(female[,1], cv)$jack.bias
+jack_bias_female <- jackknife(female[,1], cv)$jack.bias
+
+result2 <- matrix(c(jack_var_male,jack_var_female,jack_bias_male,jack_bias_female), nrow = 2, ncol = 2)
+rownames(result2) <- c("male", "female")
+colnames(result2) <- c("variance", "bias")
+result2
+```
+
+```{r}
+b <- 1000
+n.male <- dim(male)[1]
+bootcv_male <- rep(0,b)
+bootmed_male <- rep(0,b)
+n.female <- dim(female[1])
+bootcv_female <- rep(0,b)
+bootmed_female <- rep(0,b)
+
+for (i in 1:b){
+  index <- sample(n.male, size = n.male, replace = T)
+  male_data <- male[index,]
+  bootcv_male[i] <- cv(male_data[,1])
+  bootmed_male[i] <- median(male_data[,1])
+}
+boot_var_male_cv <- var(bootcv_male)
+boot_bias_male_cv <- mean(cv_male - bootcv_male)
+boot_var_male_med <- var(bootmed_male)
+boot_bias_male_med <- mean(median_male - bootmed_male)
+result3 <- matrix(c(boot_var_male_cv, boot_bias_male_cv, boot_var_male_med, boot_bias_male_med),nrow = 2, ncol = 2)
+rownames(result3) <- c("variance", "bias")
+colnames(result3) <- c("cv", "median")
+result3
+```
+
+```{r}
+n.female <- dim(female[1])
+bootcv_female <- rep(0,b)
+bootmed_female <- rep(0,b)
+for (i in 1:b){
+  index <- sample(n.female, size = n.female, replace = T)
+  female_data <- female[index,]
+  bootcv_female[i] <- cv(female_data[,1])
+  bootmed_female[i] <- median(female_data[,1])
+}
+boot_var_female_cv <- var(bootcv_female)
+boot_bias_female_cv <- mean(cv_female - bootcv_female)
+boot_var_female_med <- var(bootmed_female)
+boot_bias_female_med <- mean(median_female - bootmed_female)
+result4 <- matrix(c(boot_var_female_cv, boot_bias_female_cv, boot_var_female_med, boot_bias_female_med),nrow = 2, ncol = 2)
+rownames(result4) <- c("variance", "bias")
+colnames(result4) <- c("cv", "median")
+result4
+```

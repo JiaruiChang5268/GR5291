@@ -1,0 +1,50 @@
+---
+title: "HW9"
+author: "Jiarui Chang"
+date: "2020/11/19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(survival)
+```
+
+## 1
+```{r}
+Data <- lung
+km_result <- survfit(Surv(time, status)~sex, data = Data, type = 'kaplan-meier')
+plot(km_result,lty = c(1,2))
+legend("topright", c("Male", "Female"), lty = c(1,2))
+```
+
+```{r}
+fh_result <- survfit(Surv(time, status)~sex, data = Data, type = 'fleming-harrington')
+plot(fh_result,lty = c(1,2))
+legend("topright", c("Male", "Female"), lty = c(1,2))
+```
+
+
+### 2
+```{r}
+km_result
+fh_result
+```
+\
+From the result shown above we can find out that both of these two method have the same result. For male we get the median is 270, for female we get the median is 426.
+\
+
+## 3
+```{r}
+log_result <- survdiff(Surv(time, status)~sex, data = Data, rho=0)
+log_result
+```
+
+
+
+
+
+

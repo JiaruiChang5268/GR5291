@@ -1,0 +1,149 @@
+---
+title: "HW3"
+author: "Jiarui Chang"
+date: "2020/9/30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,message=FALSE}
+library(MASS)
+library(ggplot2)
+library(lmtest)
+dataset <- Pima.te
+```
+
+## a
+```{r}
+glu <- dataset[,'glu']
+npreg <- dataset[,'npreg']
+bp <- dataset[,'bp']
+skin <- dataset[,'skin']
+bmi <- dataset[,'bmi']
+age <- dataset[,'age']
+fit <- lm(glu ~ npreg+bp+skin+bmi+age)
+summary(fit)
+```
+
+## b
+# check the linearity
+```{r}
+fit_full <- lm(glu ~ (npreg+bp+skin+bmi+age)^2)
+anova(fit,fit_full)
+```
+\
+From the anova result we can find out the p-value is larger than 0.05, we fail to reject the null which is that 
+
+```{r}
+summary(fit)
+plot(fit,1)
+```
+\
+From the scatter plot above since the red in the middle is approximately horizontal, we can say that there is a linear relationship between glu and all of the parameter. But the adjusted R-squared value is 0.1205, which implies that the relationship is really weak in dataset.
+
+# Normality
+```{r}
+plot(fit, 2)
+shapiro.test(fit$residuals)
+```
+\
+From the qq plot we can find out the middle part looks good, but the two tail are far away from the line, and from shapiro test the p-value is really small. Thus we have to say the data fail to follow normality assumptions.
+
+# Homoscedasticity
+```{r}
+plot(fit,3)
+bptest(fit)
+```
+\
+From the residual vs x's plot, we can find out the variance is changing by the x values, and from the result of bptest, we can also find the p-value is 0.0015 less than 0.05. Thus this data violate the homoscedasticity assumptions. 
+
+# uncorrelated test
+```{r}
+dwtest(fit)
+```
+\
+From the result of Durbin-Waston test, we can find the p-value is greater than 0.05. Thus we fail to reject $H_0$ which is there is no correalation between errors.
+
+# outliners
+```{r}
+plot(fit, 5)
+```
+\
+We can find out the top three most extreme point have the standardized residual below -2 but do not exceed -3, thus we can safely say that there is no outliners in the data set.
+
+# influential points
+```{r}
+plot(fit, 4)
+plot(fit, 5)
+```
+\
+We can see that there are three point have a high cook's distance may be influence point. Then I tried deleted the point and see what the result will be:
+```{r}
+dataset_new <- dataset[-c(5,57,158),]
+fit2 <- lm(glu ~ npreg+bp+skin+bmi+age, data = dataset_new)
+summary(fit2)
+```
+\
+We can see that there is no much affect on the result, so the result suggest that there is no influence point.
+```{r}
+lm <- lm.influence(fit)
+si <- lm$sigma
+h <- lm$hat
+e <- resid(fit)
+DFFITS <- h^0.5*e/(si*(1-h))
+inf <- which(abs(DFFITS)>2*(6/332)^0.5)
+inf
+```
+\
+From the calculation of influence point, but in the plot they have much smaller influence than point 5,57,158. And the result of fit without these point also suggest the same result. Thus there is no influence point.
+
+## c 
+For non-linearity we can do some transformation to data set, like log, take square root.\
+For non-normality issue we can fit the data with a robust regression model, rather than linear regression.\
+For the non-constancy of variance, we can build up a weighted least square model for the data.\
+For the correlated error, through our test process, there is no obvious evidence show there is a correlation between them.\
+For the outliner and influential points, there is no such point in this dataset, so no need to adjust.\
+For this dataset I tried take the square root for original dataset.
+```{r}
+fit3 <- lm(log(glu) ~ npreg+bp+skin+bmi+age)
+summary(fit3)
+```
+```{r}
+plot(fit3,1)
+```
+
+```{r}
+plot(fit3,2)
+shapiro.test(fit3$residuals)
+```
+```{r}
+plot(fit3,3)
+bptest(fit3)
+```
+
+```{r}
+dwtest(fit3)
+```
+
+```{r}
+plot(fit3, 4)
+plot(fit3, 5)
+```
+\
+After we do the whole process with log data the result come out that for the normality and linearilty. it improved a little bit, but with other assumptions, log didn't bring that much difference. We may need introduce more tool to get a more reasonable data.
+
+
+## c
+```{r}
+set.seed(1)
+x2 <- cbind(age, bmi, bp, npreg, skin)
+y <- glu
+fit3 <- lmsreg(x2,y)
+fit3$coefficients
+```
+\
+From the result since there is no outliners in the data, thus the least median of squares regression can have similar result compare with linear regression. Only the interception changed a little bit.
+

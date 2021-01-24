@@ -1,0 +1,68 @@
+---
+title: "HW10"
+author: "Jiarui Chang"
+date: "2020/11/28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(survival)
+```
+
+## 1
+```{r}
+Data <- cancer
+Data$Age_group <- ifelse(Data$age < 65, "Young", "Old")
+fit <- coxph(Surv(time, status) ~ Age_group, data = Data)
+summary(fit)
+```
+\
+From the result we can find that the hazard rate for old relative to young is $e^{-0.2985}$.
+\
+
+
+## 2
+```{r}
+prop <- cox.zph(fit)
+prop
+plot(prop)
+```
+\
+From the plot we can find that the p-value is much more greater than 0.05, and the line in the plot is not a straight line, thus the proportional hazards assumption fail to hold in this situation.
+\
+
+
+## 3
+```{r}
+Data$sex_group <- ifelse(Data$sex == 1, "Male", "Female")
+fit2 <- coxph(Surv(time, status) ~ sex_group, data = Data)
+summary(fit2)
+```
+```{r}
+prop2 <- cox.zph(fit2)
+prop2
+plot(prop2)
+```
+\
+From the result we can see that the assumption for proportional hazards assumption hold in this situation, thus we can build a cox proportaional model by using sex_group.
+\
+
+
+```{r}
+fit3 <- coxph(Surv(time, status) ~ Age_group + sex_group, data = Data)
+summary(fit3)
+```
+
+```{r}
+prop3 <- cox.zph(fit3)
+plot(prop3)
+```
+
+
+
+
+
